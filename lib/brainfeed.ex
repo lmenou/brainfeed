@@ -1,18 +1,18 @@
 defmodule Brainfeed do
   @moduledoc """
-  Documentation for `Brainfeed`.
+  `Brainfeed`, a simple server to feed your brain.
   """
 
-  @doc """
-  Hello world.
+  require Logger
+  use Application
 
-  ## Examples
+  def start(_type, _args) do
+    children = [
+      {Plug.Cowboy, scheme: :http, plug: Entry, port: 4040}
+    ]
 
-      iex> Brainfeed.hello()
-      :world
-
-  """
-  def hello do
-    :world
+    opts = [strategy: :one_for_one, name: __MODULE__.Supervisor]
+    Logger.info("Running on localhost:4040")
+    Supervisor.start_link(children, opts)
   end
 end
