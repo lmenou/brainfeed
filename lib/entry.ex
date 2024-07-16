@@ -6,8 +6,10 @@ defmodule Entry do
   end
 
   def call(conn, _opts) do
+    response = Poison.encode!(%{message: "It works"})
+
     conn
-    |> put_resp_content_type("text/plain")
-    |> send_resp(200, "Hello world")
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, response)
   end
 end
