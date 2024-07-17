@@ -24,3 +24,6 @@ brainfeed-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Ignore db
+brainfeed.db*

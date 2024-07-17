@@ -15,17 +15,41 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 defmodule Entry do
+  use Plug.Router
   import Plug.Conn
 
-  def init(options) do
-    options
-  end
+  plug(:match)
 
-  def call(conn, _opts) do
-    response = Poison.encode!(%{message: "It works"})
+  plug(Plug.Parsers,
+    parsers: [:json],
+    pass: ["application/json"],
+    json_decoder: Poison
+  )
+
+  plug(:dispatch)
+
+  get "/" do
+    {:ok, encoded} = Poison.encode(%{message: "It works"})
 
     conn
     |> put_resp_content_type("application/json")
-    |> send_resp(200, response)
+    |> send_resp(200, encoded)
+  end
+
+  post "/add" do
+    res = Feeds.Manage.add(conn.body_params)
+
+    case res do
+      true -> send_resp(conn, 200, "ok")
+      false -> send_resp(conn, 400, "not ok")
+    end
+  end
+
+  match _ do
+    {:ok, encoded} = Poison.encode(%{message: "Not found"})
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, encoded)
   end
 end

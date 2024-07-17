@@ -24,7 +24,8 @@ defmodule Brainfeed do
 
   def start(_type, _args) do
     children = [
-      {Plug.Cowboy, scheme: :http, plug: Entry, port: 4040}
+      {Plug.Cowboy, scheme: :http, plug: Entry, port: 4040},
+      Feeds.Repo
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__.Supervisor]
