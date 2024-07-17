@@ -1,4 +1,8 @@
 defmodule Feeds.Repo.Migrations.CreateFeeds do
+  @moduledoc """
+  Define the migration with Ecto.
+  """
+
   use Ecto.Migration
 
   def change do

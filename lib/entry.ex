@@ -15,6 +15,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 defmodule Entry do
+  @moduledoc """
+  Define the main routes of the Brainfeed App.
+  """
+
   use Plug.Router
   import Plug.Conn
 
