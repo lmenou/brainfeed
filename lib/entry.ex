@@ -40,8 +40,19 @@ defmodule Entry do
     res = Feeds.Manage.add(conn.body_params)
 
     case res do
-      true -> send_resp(conn, 200, "ok")
-      false -> send_resp(conn, 400, "not ok")
+      {:ok, response} ->
+        {:ok, message} = Poison.encode(response)
+
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(200, message)
+
+      {:error, error} ->
+        {:ok, message} = Poison.encode(error)
+
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, message)
     end
   end
 

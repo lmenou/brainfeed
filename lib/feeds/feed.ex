@@ -16,6 +16,8 @@ defmodule Feeds.Feed do
 end
 
 defmodule Feeds.Manage do
+  import Ecto.Changeset
+
   def add(request_content) do
     params = %{
       author: Map.get(request_content, ~s"author"),
@@ -26,8 +28,16 @@ defmodule Feeds.Manage do
     |> Feeds.Feed.changeset(params)
     |> Feeds.Repo.insert()
     |> case do
-      {:ok, _} -> true
-      {:error, _changeset} -> false
+      {:ok, feed} -> {:ok, Map.from_struct(feed)}
+      {:error, changeset} -> {:error, generate_error_map(changeset)}
     end
+  end
+
+  defp generate_error_map(changeset) do
+    traverse_errors(changeset, fn {msg, opts} ->
+      Enum.reduce(opts, msg, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
   end
 end
