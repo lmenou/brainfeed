@@ -33,7 +33,7 @@ defmodule Entry do
   plug(:dispatch)
 
   get "/" do
-    {:ok, encoded} = Poison.encode(%{message: "It works"})
+    {:ok, encoded} = Poison.encode(%{message: "Brainfeed at your service!"})
 
     conn
     |> put_resp_content_type("application/json")
