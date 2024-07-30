@@ -15,6 +15,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 defmodule Brainfeed.MixProject do
+  @moduledoc false
+
   use Mix.Project
 
   def project do
@@ -51,7 +53,8 @@ defmodule Brainfeed.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:poison, "~> 5.0"},
       {:ecto_sqlite3, "~> 0.16"},
-      {:lettuce, "~> 0.3.0", only: :dev}
+      {:lettuce, "~> 0.3.0", only: :dev},
+      {:credo, "~> 1.7.7", only: [:dev, :test], runtime: false}
     ]
   end
 end
