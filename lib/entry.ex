@@ -47,21 +47,30 @@ defmodule Entry do
     to_add = %{author: params[~s"author"], feed: params[~s"feed"]}
 
     case Feeds.Manage.add(to_add) do
-      {:ok, response} ->
+      {:ok, feed} ->
         Logger.info("Adding feed #{params[~s"feed"]} to the database")
-        {:ok, message} = Poison.encode(response)
-
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(200, message)
+        make_response(200, feed, conn)
 
       {:error, error} ->
-        Logger.info("Problem occured while adding feed #{params[~s"feed"]} to the database")
-        {:ok, message} = Poison.encode(error)
+        Logger.error("Problem occured while adding feed #{params[~s"feed"]} to the database")
+        make_response(400, error, conn)
+    end
+  end
 
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(400, message)
+  post "/delete" do
+    fetch_query_params(conn)
+    params = conn.query_params()
+    to_delete = params[~s"feed"]
+    Logger.warning("Attempt to delete #{params[~s"feed"]}")
+
+    case Feeds.Manage.delete(to_delete) do
+      {:ok, feed} ->
+        Logger.info("Deletion of #{params[~s"feed"]} occured")
+        make_response(200, feed, conn)
+
+      {:error, error} ->
+        Logger.error("Could not delete #{params[~s"feed"]}")
+        make_response(400, error, conn)
     end
   end
 
@@ -71,5 +80,15 @@ defmodule Entry do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(200, encoded)
+  end
+
+  @spec make_response(integer(), map(), Plug.Conn.t()) :: Plug.Conn.t()
+  # simply return the appropriate encoded response
+  defp make_response(status_code, to_jsonize, conn) do
+    {:ok, message} = Poison.encode(to_jsonize)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(status_code, message)
   end
 end
