@@ -53,12 +53,7 @@ defmodule Feeds.Manage do
   Here is an example of such a `json`: `{ "author": "me", "feed": "http://my-awesome-feed.fr" }`
   """
   @spec add(map()) :: {term(), map()}
-  def add(request_content) do
-    params = %{
-      author: Map.get(request_content, ~s"author"),
-      feed: Map.get(request_content, ~s"feed")
-    }
-
+  def add(params) do
     %Feeds.Feed{}
     |> Feeds.Feed.changeset(params)
     |> Feeds.Repo.insert()

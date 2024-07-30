@@ -21,6 +21,7 @@ defmodule Entry do
 
   use Plug.Router
   import Plug.Conn
+  require Logger
 
   plug(:match)
 
@@ -41,10 +42,13 @@ defmodule Entry do
   end
 
   post "/add" do
-    res = Feeds.Manage.add(conn.body_params)
+    fetch_query_params(conn)
+    params = conn.query_params()
+    to_add = %{author: params[~s"author"], feed: params[~s"feed"]}
 
-    case res do
+    case Feeds.Manage.add(to_add) do
       {:ok, response} ->
+        Logger.info("Adding feed #{params[~s"feed"]} to the database")
         {:ok, message} = Poison.encode(response)
 
         conn
@@ -52,6 +56,7 @@ defmodule Entry do
         |> send_resp(200, message)
 
       {:error, error} ->
+        Logger.info("Problem occured while adding feed #{params[~s"feed"]} to the database")
         {:ok, message} = Poison.encode(error)
 
         conn
