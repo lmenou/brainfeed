@@ -30,9 +30,17 @@ defmodule Brainfeed.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: extra_applications(Mix.env(), [:logger]),
       mod: {Brainfeed, []}
     ]
+  end
+
+  defp extra_applications(:dev, default) do
+    default ++ [:lettuce]
+  end
+
+  defp extra_applications(_, default) do
+    default
   end
 
   # Run "mix help deps" to learn about dependencies.
@@ -42,7 +50,8 @@ defmodule Brainfeed.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:plug_cowboy, "~> 2.0"},
       {:poison, "~> 5.0"},
-      {:ecto_sqlite3, "~> 0.16"}
+      {:ecto_sqlite3, "~> 0.16"},
+      {:lettuce, "~> 0.3.0", only: :dev}
     ]
   end
 end
