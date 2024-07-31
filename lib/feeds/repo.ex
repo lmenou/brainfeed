@@ -15,6 +15,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 defmodule Feeds.Repo do
+  @moduledoc """
+  Define the `Feeds` repo.
+  """
+
   use Ecto.Repo,
     otp_app: :brainfeed,
     adapter: Ecto.Adapters.SQLite3
