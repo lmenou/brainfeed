@@ -83,6 +83,31 @@ defmodule Entry do
     end
   end
 
+  put "/update" do
+    fetch_query_params(conn)
+    params = conn.query_params()
+
+    case {params[~s"feed"], params[~s"author"]} do
+      {nil, nil} ->
+        make_response(conn, 400, %{:message => "Could not process request"})
+
+      {nil, author} ->
+        Logger.warning("Attempt to update on records with author: #{author}")
+
+        conn
+        |> send_resp(
+          200,
+          Feeds.Manage.update_on(%{author: author}, conn.body_params()) |> to_string
+        )
+
+      {feed, _} ->
+        Logger.warning("Attempt to update on records with author: #{feed}")
+
+        conn
+        |> send_resp(200, Feeds.Manage.update_on(%{feed: feed}, conn.body_params()) |> to_string)
+    end
+  end
+
   post "/delete" do
     fetch_query_params(conn)
     params = conn.query_params()

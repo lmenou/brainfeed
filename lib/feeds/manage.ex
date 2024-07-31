@@ -43,8 +43,8 @@ defmodule Feeds.Manage do
   @doc """
   Find an element in the `feeds` table.
 
-  Queries the database and return the result under the form of a `Map` or a
-  `List` of `Map` to be jsonized.
+  Queries the database and return the result under the form of a `map` or a
+  `list` of `map` to be jsonized.
   """
   @spec find(%{feed: String.t()} | %{author: String.t()}) ::
           :not_found | {:ok, map() | list(map())} | {:error, map()}
@@ -74,6 +74,85 @@ defmodule Feeds.Manage do
       [_ | _] ->
         {:ok,
          Enum.map(result, fn item -> %{:feed => elem(item, 0), :author => elem(item, 1)} end)}
+    end
+  end
+
+  @doc """
+  Update feed information on the database.
+
+  The provided arguments **gives the hint** on **where to update** on the
+  database.
+
+  Note that each feed must be unique, hence only one entry will get
+  updated if a feed is provided via the map.
+  Otherwise, multiple entries can be updated in the case of an author.
+  """
+  @spec update_on(%{author: String.t()} | %{feed: String.t()}, map()) :: non_neg_integer()
+  def update_on(%{author: author}, data) do
+    case data do
+      %{"author" => to_update_author, "feed" => to_update_feed} ->
+        with {updated, _} <-
+               from(f in Feeds.Feed,
+                 where: f.author == ^author,
+                 update: [set: [feed: ^to_update_feed, author: ^to_update_author]]
+               )
+               |> Feeds.Repo.update_all([]) do
+          updated
+        end
+
+      %{"author" => to_update} ->
+        with {updated, _} <-
+               from(f in Feeds.Feed,
+                 where: f.author == ^author,
+                 update: [set: [author: ^to_update]]
+               )
+               |> Feeds.Repo.update_all([]) do
+          updated
+        end
+
+      %{"feed" => to_update} ->
+        with {updated, _} <-
+               from(f in Feeds.Feed,
+                 where: f.author == ^author,
+                 update: [set: [feed: ^to_update]]
+               )
+               |> Feeds.Repo.update_all([]) do
+          updated
+        end
+    end
+  end
+
+  def update_on(%{feed: feed}, data) do
+    case data do
+      %{"author" => to_update_author, "feed" => to_update_feed} ->
+        with {updated, _} <-
+               from(f in Feeds.Feed,
+                 where: f.author == ^feed,
+                 update: [set: [feed: ^to_update_feed, author: ^to_update_author]]
+               )
+               |> Feeds.Repo.update_all([]) do
+          updated
+        end
+
+      %{"author" => to_update} ->
+        with {updated, _} <-
+               from(f in Feeds.Feed,
+                 where: f.author == ^feed,
+                 update: [set: [author: ^to_update]]
+               )
+               |> Feeds.Repo.update_all([]) do
+          updated
+        end
+
+      %{"feed" => to_update} ->
+        with {updated, _} <-
+               from(f in Feeds.Feed,
+                 where: f.author == ^feed,
+                 update: [set: [feed: ^to_update]]
+               )
+               |> Feeds.Repo.update_all([]) do
+          updated
+        end
     end
   end
 
