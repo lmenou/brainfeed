@@ -57,6 +57,32 @@ defmodule Entry do
     end
   end
 
+  get "/find" do
+    fetch_query_params(conn)
+    params = conn.query_params()
+
+    case {params[~s"feed"], params[~s"author"]} do
+      {nil, nil} ->
+        make_response(400, %{:message => "Could not process request"}, conn)
+
+      {nil, author} ->
+        case Feeds.Manage.find(%{author: author}) do
+          :not_found ->
+            make_response(404, %{}, conn)
+
+          {:ok, result} ->
+            make_response(200, result, conn)
+        end
+
+      {feed, _} ->
+        case Feeds.Manage.find(%{feed: feed}) do
+          :not_found -> make_response(404, %{}, conn)
+          {:ok, feed} -> make_response(200, feed, conn)
+          {:error, message} -> make_response(400, message, conn)
+        end
+    end
+  end
+
   post "/delete" do
     fetch_query_params(conn)
     params = conn.query_params()

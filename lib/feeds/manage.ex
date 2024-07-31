@@ -20,6 +20,7 @@ defmodule Feeds.Manage do
   """
   require Logger
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
 
   @doc """
   Add an entry to the `feeds` table.
@@ -40,10 +41,40 @@ defmodule Feeds.Manage do
   end
 
   @doc """
-  Get an entry to the `feeds` table.
+  Find an element in the `feeds` table.
+
+  Queries the database and return the result under the form of a `Map` or a
+  `List` of `Map` to be jsonized.
   """
-  def get(request_content) do
-    IO.inspect(request_content)
+  @spec find(%{feed: String.t()} | %{author: String.t()}) ::
+          :not_found | {:ok, map() | list(map())} | {:error, map()}
+  def find(%{feed: feed}) do
+    result = Feeds.Feed |> Feeds.Repo.get_by(feed: feed)
+
+    case result do
+      nil -> :not_found
+      feed -> {:ok, feed |> Map.from_struct() |> Map.delete(:__meta__)}
+    end
+  rescue
+    e ->
+      Logger.error("Found more than one entry for #{feed}", inspect(e))
+      {:error, %{:message => "more than one entry for #{feed}"}}
+  end
+
+  def find(%{author: author}) do
+    query =
+      from(feed in "feeds", where: feed.author == ^author, select: {feed.feed, feed.author})
+
+    result = Feeds.Repo.all(query)
+
+    case result do
+      [] ->
+        :not_found
+
+      [_ | _] ->
+        {:ok,
+         Enum.map(result, fn item -> %{:feed => elem(item, 0), :author => elem(item, 1)} end)}
+    end
   end
 
   @doc """
@@ -54,30 +85,28 @@ defmodule Feeds.Manage do
   """
   @spec delete(String.t()) :: {term(), map()}
   def delete(feed) do
-    try do
-      result = Feeds.Feed |> Feeds.Repo.get_by(feed: feed)
+    result = Feeds.Feed |> Feeds.Repo.get_by(feed: feed)
 
-      case result do
-        {:ok, feed} ->
-          deletion = Feeds.Repo.delete(feed)
+    case result do
+      {:ok, feed} ->
+        deletion = Feeds.Repo.delete(feed)
 
-          case deletion do
-            {:ok, feed} ->
-              {:ok, Map.from_struct(feed)}
+        case deletion do
+          {:ok, feed} ->
+            {:ok, Map.from_struct(feed)}
 
-            {:error, changeset} ->
-              {:error, generate_error_map(changeset)}
-          end
+          {:error, changeset} ->
+            {:error, generate_error_map(changeset)}
+        end
 
-        nil ->
-          Logger.error("Could not find an entry for #{feed}?")
-          {:error, %{message: "Could not find the #{feed} entry, aborting"}}
-      end
-    rescue
-      e ->
-        Logger.error("Could be more than one entry", inspect(e))
-        {:error, %{message: "Possibly more than one entry for #{feed}, aborting"}}
+      nil ->
+        Logger.error("Could not find an entry for #{feed}?")
+        {:error, %{message: "Could not find the #{feed} entry, aborting"}}
     end
+  rescue
+    e ->
+      Logger.error("Could be more than one entry", inspect(e))
+      {:error, %{message: "Possibly more than one entry for #{feed}, aborting"}}
   end
 
   @spec generate_error_map(map()) :: map()
