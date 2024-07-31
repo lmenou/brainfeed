@@ -49,11 +49,11 @@ defmodule Entry do
     case Feeds.Manage.add(to_add) do
       {:ok, feed} ->
         Logger.info("Adding feed #{params[~s"feed"]} to the database")
-        make_response(200, feed, conn)
+        make_response(conn, 200, feed)
 
       {:error, error} ->
         Logger.error("Problem occured while adding feed #{params[~s"feed"]} to the database")
-        make_response(400, error, conn)
+        make_response(conn, 400, error)
     end
   end
 
@@ -63,22 +63,22 @@ defmodule Entry do
 
     case {params[~s"feed"], params[~s"author"]} do
       {nil, nil} ->
-        make_response(400, %{:message => "Could not process request"}, conn)
+        make_response(conn, 400, %{:message => "Could not process request"})
 
       {nil, author} ->
         case Feeds.Manage.find(%{author: author}) do
           :not_found ->
-            make_response(404, %{}, conn)
+            make_response(conn, 404)
 
           {:ok, result} ->
-            make_response(200, result, conn)
+            make_response(conn, 200, result)
         end
 
       {feed, _} ->
         case Feeds.Manage.find(%{feed: feed}) do
-          :not_found -> make_response(404, %{}, conn)
-          {:ok, feed} -> make_response(200, feed, conn)
-          {:error, message} -> make_response(400, message, conn)
+          :not_found -> make_response(conn, 404)
+          {:ok, feed} -> make_response(conn, 200, feed)
+          {:error, message} -> make_response(conn, 400, message)
         end
     end
   end
@@ -92,11 +92,11 @@ defmodule Entry do
     case Feeds.Manage.delete(to_delete) do
       {:ok, feed} ->
         Logger.info("Deletion of #{params[~s"feed"]} occured")
-        make_response(200, feed, conn)
+        make_response(conn, 200, feed)
 
       {:error, error} ->
         Logger.error("Could not delete #{params[~s"feed"]}")
-        make_response(400, error, conn)
+        make_response(conn, 400, error)
     end
   end
 
@@ -108,13 +108,17 @@ defmodule Entry do
     |> send_resp(200, encoded)
   end
 
-  @spec make_response(integer(), map(), Plug.Conn.t()) :: Plug.Conn.t()
-  # simply return the appropriate encoded response
-  defp make_response(status_code, to_jsonize, conn) do
+  @spec make_response(Plug.Conn.t(), Plug.Conn.status(), map() | nil) :: Plug.Conn.t()
+  defp make_response(conn, status_code, to_jsonize) do
+    # simply return the appropriate encoded response
     {:ok, message} = Poison.encode(to_jsonize)
 
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(status_code, message)
+  end
+
+  defp make_response(conn, status_code) do
+    send_resp(conn, status_code, "")
   end
 end
