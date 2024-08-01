@@ -44,16 +44,26 @@ defmodule Entry do
   post "/add" do
     fetch_query_params(conn)
     params = conn.query_params()
-    to_add = %{author: params[~s"author"], feed: params[~s"feed"]}
 
-    case Feeds.Manage.add(to_add) do
-      {:ok, feed} ->
-        Logger.info("Adding feed #{params[~s"feed"]} to the database")
-        make_response(conn, 200, feed)
+    case {params[~s"feed"], params[~s"author"]} do
+      {nil, _} ->
+        make_response(conn, 400, %{:message => "Could not process the request"})
 
-      {:error, error} ->
-        Logger.error("Problem occured while adding feed #{params[~s"feed"]} to the database")
-        make_response(conn, 400, error)
+      {_, nil} ->
+        make_response(conn, 400, %{:message => "Could not process the request"})
+
+      {_, _} ->
+        to_add = %{author: params[~s"author"], feed: params[~s"feed"]}
+
+        case Feeds.Manage.add(to_add) do
+          {:ok, feed} ->
+            Logger.info("Adding feed #{params[~s"feed"]} to the database")
+            make_response(conn, 200, feed)
+
+          {:error, error} ->
+            Logger.error("Problem occured while adding feed #{params[~s"feed"]} to the database")
+            make_response(conn, 400, error)
+        end
     end
   end
 
