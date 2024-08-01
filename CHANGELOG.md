@@ -1,3 +1,20 @@
+## 0.0.3 (2024-08-01)
+
+### Feat
+
+- make delete more versatile
+- make update in db possible
+
+### Fix
+
+- improve logger config
+- correct delete request
+- handle wrong add request
+
+### Refactor
+
+- add polymorphism on make_response
+
 ## 0.0.2 (2024-07-31)
 
 ### Feat
