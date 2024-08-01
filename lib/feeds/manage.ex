@@ -164,28 +164,25 @@ defmodule Feeds.Manage do
   """
   @spec delete(String.t()) :: {term(), map()}
   def delete(feed) do
-    result = Feeds.Feed |> Feeds.Repo.get_by(feed: feed)
-
-    case result do
-      {:ok, feed} ->
-        deletion = Feeds.Repo.delete(feed)
-
-        case deletion do
-          {:ok, feed} ->
-            {:ok, Map.from_struct(feed)}
-
-          {:error, changeset} ->
-            {:error, generate_error_map(changeset)}
-        end
-
+    case Feeds.Repo.get_by(Feeds.Feed, feed: feed) do
       nil ->
         Logger.error("Could not find an entry for #{feed}?")
         {:error, %{message: "Could not find the #{feed} entry, aborting"}}
+
+      to_del ->
+        case Feeds.Repo.delete(to_del) do
+          {:ok, deleted} ->
+            {:ok, Map.from_struct(deleted)}
+
+          {:error, changeset} ->
+            Logger.error("Could not delete the entry #{feed}")
+            {:error, generate_error_map(changeset)}
+        end
     end
   rescue
-    e ->
-      Logger.error("Could be more than one entry", inspect(e))
-      {:error, %{message: "Possibly more than one entry for #{feed}, aborting"}}
+    _ ->
+      Logger.error("Internal error occured while deleting the entry #{feed}")
+      {:error, %{message: "Error occured for #{feed} deletion, aborting"}}
   end
 
   @spec generate_error_map(map()) :: map()
