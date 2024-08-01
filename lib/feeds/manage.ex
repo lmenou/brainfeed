@@ -159,11 +159,12 @@ defmodule Feeds.Manage do
   @doc """
   Delete an entry to the `feeds` table.
 
-  Must be passed a `String.t()` containing the feed address.
-  Abort cowardly if the entry is not found or not unique.
+  If `%{feed: feed}` is given, abort cowardly if the entry is not found or not
+  unique. Otherwise try to delete all the entries containing the map provided
+  `author`.
   """
-  @spec delete(String.t()) :: {term(), map()}
-  def delete(feed) do
+  @spec delete_on(%{feed: String.t()} | %{author: String.t()}) :: {atom(), map()}
+  def delete_on(%{feed: feed}) do
     case Feeds.Repo.get_by(Feeds.Feed, feed: feed) do
       nil ->
         Logger.error("Could not find an entry for #{feed}?")
@@ -183,6 +184,18 @@ defmodule Feeds.Manage do
     _ ->
       Logger.error("Internal error occured while deleting the entry #{feed}")
       {:error, %{message: "Error occured for #{feed} deletion, aborting"}}
+  end
+
+  def delete_on(%{author: author}) do
+    query =
+      from(f in Feeds.Feed,
+        where: f.author == ^author
+      )
+
+    with {num, _} <- Feeds.Repo.delete_all(query) do
+      Logger.info("Deleted #{num} entry with author: #{author}")
+      {:ok, %{message: "deleted #{num} entries"}}
+    end
   end
 
   @spec generate_error_map(map()) :: map()

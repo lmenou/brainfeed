@@ -121,17 +121,29 @@ defmodule Entry do
   post "/delete" do
     fetch_query_params(conn)
     params = conn.query_params()
-    to_delete = params[~s"feed"]
-    Logger.warning("Attempt to delete #{params[~s"feed"]}")
 
-    case Feeds.Manage.delete(to_delete) do
-      {:ok, feed} ->
-        Logger.info("Deletion of #{params[~s"feed"]} occured")
-        make_response(conn, 200, feed)
+    case {params[~s"feed"], params[~s"author"]} do
+      {nil, nil} ->
+        make_response(conn, 400, %{:message => "Could not process request"})
 
-      {:error, error} ->
-        Logger.error("Could not delete #{params[~s"feed"]}")
-        make_response(conn, 400, error)
+      {nil, author} ->
+        Logger.warning("Attempt to delete on records with author: #{author}")
+
+        with {:ok, response} <- Feeds.Manage.delete_on(%{author: author}) do
+          Logger.info("Deletion of #{params[~s"author"]} occured")
+          make_response(conn, 200, response)
+        end
+
+      {feed, _} ->
+        case Feeds.Manage.delete_on(%{feed: feed}) do
+          {:ok, feed} ->
+            Logger.info("Deletion of #{params[~s"feed"]} occured")
+            make_response(conn, 200, feed)
+
+          {:error, error} ->
+            Logger.error("Could not delete with #{params[~s"feed"]}")
+            make_response(conn, 400, error)
+        end
     end
   end
 
