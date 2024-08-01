@@ -6,8 +6,8 @@ config :lettuce, folders_to_watch: ["lib", "priv", "config"]
 
 if config_env() == :dev do
   config :logger, :default_handler, level: :debug
-  config :logger, :default_formatter, format: "$message $metadata"
+  config :logger, :default_formatter, format: "$level: $message $metadata\n"
 else
   config :logger, :default_handler, level: :info
-  config :logger, :default_formatter, format: "$time $message $metadata"
+  config :logger, :default_formatter, format: "$time - $level: $message $metadata\n"
 end
