@@ -35,7 +35,7 @@ defmodule Feeds.Manage do
     |> Feeds.Feed.changeset(params)
     |> Feeds.Repo.insert()
     |> case do
-      {:ok, feed} -> {:ok, Map.from_struct(feed)}
+      {:ok, feed} -> {:ok, Map.from_struct(feed) |> Map.delete(:__meta__)}
       {:error, changeset} -> {:error, generate_error_map(changeset)}
     end
   end
@@ -87,7 +87,7 @@ defmodule Feeds.Manage do
   updated if a feed is provided via the map.
   Otherwise, multiple entries can be updated in the case of an author.
   """
-  @spec update_on(%{author: String.t()} | %{feed: String.t()}, map()) :: non_neg_integer()
+  @spec update_on(%{author: String.t()} | %{feed: String.t()}, map()) :: {atom(), map()}
   def update_on(%{author: author}, data) do
     case data do
       %{"author" => to_update_author, "feed" => to_update_feed} ->
@@ -97,7 +97,7 @@ defmodule Feeds.Manage do
                  update: [set: [feed: ^to_update_feed, author: ^to_update_author]]
                )
                |> Feeds.Repo.update_all([]) do
-          updated
+          {:ok, %{message: "updated #{updated} entries"}}
         end
 
       %{"author" => to_update} ->
@@ -107,7 +107,7 @@ defmodule Feeds.Manage do
                  update: [set: [author: ^to_update]]
                )
                |> Feeds.Repo.update_all([]) do
-          updated
+          {:ok, %{message: "updated #{updated} entries"}}
         end
 
       %{"feed" => to_update} ->
@@ -117,7 +117,7 @@ defmodule Feeds.Manage do
                  update: [set: [feed: ^to_update]]
                )
                |> Feeds.Repo.update_all([]) do
-          updated
+          {:ok, %{message: "updated #{updated} entries"}}
         end
     end
   end
@@ -131,7 +131,7 @@ defmodule Feeds.Manage do
                  update: [set: [feed: ^to_update_feed, author: ^to_update_author]]
                )
                |> Feeds.Repo.update_all([]) do
-          updated
+          {:ok, %{message: "updated #{updated} entries"}}
         end
 
       %{"author" => to_update} ->
@@ -141,7 +141,7 @@ defmodule Feeds.Manage do
                  update: [set: [author: ^to_update]]
                )
                |> Feeds.Repo.update_all([]) do
-          updated
+          {:ok, %{message: "updated #{updated} entries"}}
         end
 
       %{"feed" => to_update} ->
@@ -151,7 +151,7 @@ defmodule Feeds.Manage do
                  update: [set: [feed: ^to_update]]
                )
                |> Feeds.Repo.update_all([]) do
-          updated
+          {:ok, %{message: "updated #{updated} entries"}}
         end
     end
   end
@@ -173,7 +173,7 @@ defmodule Feeds.Manage do
       to_del ->
         case Feeds.Repo.delete(to_del) do
           {:ok, deleted} ->
-            {:ok, Map.from_struct(deleted)}
+            {:ok, Map.from_struct(deleted) |> Map.delete(:__meta__)}
 
           {:error, changeset} ->
             Logger.error("Could not delete the entry #{feed}")

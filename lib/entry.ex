@@ -105,17 +105,18 @@ defmodule Entry do
       {nil, author} ->
         Logger.warning("Attempt to update on records with author: #{author}")
 
-        conn
-        |> send_resp(
-          200,
-          Feeds.Manage.update_on(%{author: author}, conn.body_params()) |> to_string
-        )
+        with {:ok, response} <- Feeds.Manage.update_on(%{author: author}, conn.body_params()) do
+          Logger.info("Update on #{params[~s"author"]} occured")
+          make_response(conn, 200, response)
+        end
 
       {feed, _} ->
         Logger.warning("Attempt to update on records with author: #{feed}")
 
-        conn
-        |> send_resp(200, Feeds.Manage.update_on(%{feed: feed}, conn.body_params()) |> to_string)
+        with {:ok, response} <- Feeds.Manage.update_on(%{feed: feed}, conn.body_params()) do
+          Logger.info("Update on #{params[~s"author"]} occured")
+          make_response(conn, 200, response)
+        end
     end
   end
 
