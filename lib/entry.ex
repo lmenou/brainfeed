@@ -35,6 +35,7 @@ defmodule Entry do
 
   get "/" do
     {:ok, encoded} = Poison.encode(%{message: "Brainfeed at your service!"})
+    Logger.debug("Got root request!")
 
     conn
     |> put_resp_content_type("application/json")
@@ -148,11 +149,12 @@ defmodule Entry do
   end
 
   match _ do
-    {:ok, encoded} = Poison.encode(%{message: "Not found"})
+    Logger.debug("A non-defined route was called!")
+    {:ok, encoded} = Poison.encode(%{message: "Route not found"})
 
     conn
     |> put_resp_content_type("application/json")
-    |> send_resp(200, encoded)
+    |> send_resp(404, encoded)
   end
 
   @spec make_response(Plug.Conn.t(), Plug.Conn.status(), map() | nil) :: Plug.Conn.t()
